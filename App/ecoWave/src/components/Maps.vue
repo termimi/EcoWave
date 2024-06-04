@@ -1,16 +1,14 @@
 <script>
 import { onMounted,ref } from 'vue';
-const userLongitude = ref(null);
-const userLatitude = ref(null);
-const getLocationOfUser = ()=>{
-    navigator.geolocation.getCurrentPosition((position) => {
-        userLatitude = position.coords.latitude;
-        userLongitude = position.coords.longitude;
-    })
+let userLongitude = ref(null);
+let userLatitude = ref(null);
+let latitude =ref(null);
+const getLocationOfUser = async ()=>{
+    
 }
-const AddMarker =(map)=>{
+const AddMarker =(map,latitude,longitude)=>{
     const tt = window.tt; 
-    var location = [-121.91595, 37.36729]; 
+    var location = [longitude, latitude]; 
     var popupOffset = 25; 
  
     var marker = new tt.Marker().setLngLat(location).addTo(map); 
@@ -31,8 +29,13 @@ export default {
             style: 'tomtom://vector/1/basic-main', 
         }); 
         map.addControl(new tt.FullscreenControl()); 
-        map.addControl(new tt.NavigationControl());  
-        AddMarker(map);
+        map.addControl(new tt.NavigationControl());
+        console.log("lattt :" + userLatitude.value);
+        navigator.geolocation.getCurrentPosition((position) => {
+            userLatitude.value = position.coords.latitude;
+            userLongitude.value = position.coords.longitude;
+            AddMarker(map,userLatitude.value,userLongitude.value);
+        })
     }) 
     return { 
       mapRef, 
