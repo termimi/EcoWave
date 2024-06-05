@@ -9,7 +9,7 @@ export const state = {
     finish: undefined,
   },
 };
-const drawMarker = (type) => {
+const drawMarker = (type,map) => {
   const tt = window.tt;
   if (state.marker[type]) {
     state.marker[type].remove();
@@ -26,10 +26,10 @@ const drawMarker = (type) => {
     .setLngLat(state[type])
     .addTo(map);
 
-  updateBounds();
+  updateBounds(map);
 };
 
-const updateBounds = () => {
+const updateBounds = (map) => {
   const tt = window.tt;
   const bounds = new tt.LngLatBounds();
 
@@ -44,7 +44,7 @@ const updateBounds = () => {
     map.fitBounds(bounds, { duration: 0, padding: 50 });
   }
 };
-const updateRoutesBounds = (coordinates) => {
+const updateRoutesBounds = (coordinates,map) => {
   const tt = window.tt;
   const bounds = new tt.LngLatBounds();
 
@@ -57,7 +57,7 @@ const updateRoutesBounds = (coordinates) => {
   }
 };
 
-const calculateRoutee = (map,state) => {
+const calculateRoute = (map, state) => {
   try {
     const tt = window.tt;
     if (map.getLayer('route')) {
@@ -93,16 +93,16 @@ const calculateRoutee = (map,state) => {
         });
 
         const coordinates = geojson.features[0].geometry.coordinates;
-        updateRoutesBounds(coordinates);
+        updateRoutesBounds(coordinates,map);
       })
       .catch((error) => {
         console.error(error);
       });
   }
-  catch(error){
+  catch (error) {
     console.log(error)
   }
-  
+
 };
 
 
@@ -111,8 +111,8 @@ export const onResultSelected = (result, type, map) => {
   const pos = result.position;
   state[type] = [pos.lng, pos.lat];
 
-  drawMarker(type);
-  calculateRoutee(map,state);
+  drawMarker(type,map);
+  calculateRoute(map, state);
 };
 
 export const onResultCleared = (type, map) => {
@@ -124,7 +124,7 @@ export const onResultCleared = (type, map) => {
     updateBounds();
   }
 
-  calculateRoutee(map,state);
+  calculateRoute(map, state);
 };
 export const createSearchBox = (type, map) => {
   const tt = window.tt;
