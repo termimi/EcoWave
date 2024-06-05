@@ -9,36 +9,6 @@ export const state = {
     finish: undefined,
   },
 };
-const getUserLocation = () => {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude
-        });
-      },
-      (error) => {
-        reject(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
-  });
-};
-
-const addMarker = (map, latitude, longitude) => {
-  const tt = window.tt;
-  const location = [longitude, latitude];
-  const marker = new tt.Marker().setLngLat(location).addTo(map);
-  const popup = new tt.Popup({ offset: 25 }).setText('You are here');
-  marker.setPopup(popup).togglePopup();
-};
-
-
 const drawMarker = (type) => {
   const tt = window.tt;
   if (state.marker[type]) {
@@ -87,7 +57,7 @@ const updateRoutesBounds = (coordinates) => {
   }
 };
 
-const calculateRoute = (map,state) => {
+const calculateRoutee = (map,state) => {
   try {
     const tt = window.tt;
     if (map.getLayer('route')) {
@@ -142,7 +112,7 @@ export const onResultSelected = (result, type, map) => {
   state[type] = [pos.lng, pos.lat];
 
   drawMarker(type);
-  calculateRoute(map,state);
+  calculateRoutee(map,state);
 };
 
 export const onResultCleared = (type, map) => {
@@ -154,7 +124,7 @@ export const onResultCleared = (type, map) => {
     updateBounds();
   }
 
-  calculateRoute(map,state);
+  calculateRoutee(map,state);
 };
 export const createSearchBox = (type, map) => {
   const tt = window.tt;
@@ -187,47 +157,5 @@ export const createSearchBox = (type, map) => {
 
 };
 
-export default {
-  name: 'Map',
-  setup() {
-    const mapRef = ref(null);
-    let map;
 
-
-    const initializeMap = async () => {
-      try {
-        const userLocation = await getUserLocation();
-        const tt = window.tt;
-        map = tt.map({
-          key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
-          container: mapRef.value,
-          style: 'https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.1/mapstyles/basic_main.json',
-          center: [userLocation.longitude, userLocation.latitude],
-          zoom: 15
-        });
-
-        map.addControl(new tt.FullscreenControl());
-        map.addControl(new tt.NavigationControl());
-        addMarker(map, userLocation.latitude, userLocation.longitude);
-
-        createSearchBox('start');
-        createSearchBox('finish');
-      } catch (error) {
-        console.error('Error loading map:', error);
-      }
-    };
-
-    onMounted(() => {
-      if (window.tt) {
-        initializeMap();
-      } else {
-        console.error('TomTom SDK not loaded');
-      }
-    });
-
-    return {
-      mapRef,
-    };
-  },
-};
 </script>
