@@ -3,6 +3,7 @@ import { onMounted,ref } from 'vue';
 let userLongitude = ref(null);
 let userLatitude = ref(null);
 let errorLoadingMap = ref(null);
+import { createSearchBox} from './features/routing.vue';
 const getUserLocation = () =>{
     return new Promise((resolve,reject) => {
         navigator.geolocation.getCurrentPosition((position) => {
@@ -21,7 +22,7 @@ const getUserLocation = () =>{
     }) 
 }
 const AddMarker =(map,latitude,longitude)=>{
-    const tt = window.tt; 
+    const tt = window.tt;
     var location = [longitude, latitude]; 
     var popupOffset = 25; 
     var marker = new tt.Marker().setLngLat(location).addTo(map); 
@@ -32,7 +33,7 @@ const AddMarker =(map,latitude,longitude)=>{
 export default { 
   name: 'Map', 
   setup() { 
-    const mapRef = ref(null); 
+    const mapRef = ref(null);
     onMounted(async () => { 
         try{
             await getUserLocation()
@@ -48,6 +49,9 @@ export default {
             map.addControl(new tt.NavigationControl());
             console.log(userLatitude.value)
             AddMarker(map,userLatitude.value,userLongitude.value);
+
+            createSearchBox('start',map);
+            createSearchBox('finish',map);
         }
         catch{
             errorLoadingMap = true
@@ -63,13 +67,45 @@ export default {
 .map { 
     height: 50vh; 
     width: 50vw; 
-} 
+}
+.tt-overlay-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: white;
+  padding: 10px;
+  z-index: 1;
+}
+.searchbox-container {
+  display: flex;
+}
+.route-marker {
+  align-items: center;
+  background-color: #4a90e2;
+  border: solid 3px #2faaff;
+  border-radius: 50%;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  transition: width 0.1s, height 0.1s;
+  width: 32px;
+}
 </style> 
 
 <template>
     <h1>Maps</h1>
     <div class="map" ref="mapRef">
-        
+    
+    </div>
+    <div id="foldable" class="tt-overlay-panel -left-top -medium js-foldable">
+      <form id="form">
+        <div id="startSearchBox" class="searchbox-container">
+          <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
+        </div>
+        <div id="finishSearchBox" class="searchbox-container">
+          <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
+        </div>
+      </form>
     </div>
     
 </template>
