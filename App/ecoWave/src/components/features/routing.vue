@@ -73,7 +73,7 @@ const calculateRoute = (map, state) => {
     tt.services
       .calculateRoute({
         key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
-        traffic: false,
+        traffic: true,
         locations: `${startPos}:${finalPos}`
       })
       .then((response) => {

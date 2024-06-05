@@ -1,69 +1,114 @@
+<template>
+  <h1>Maps</h1>
+  <div class="map" ref="mapRef"></div>
+  <div id="foldable" class="tt-overlay-panel -left-top -medium js-foldable">
+    <form id="form">
+      <div id="startSearchBox" class="searchbox-container">
+        <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
+      </div>
+      <div id="finishSearchBox" class="searchbox-container">
+        <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
+      </div>
+      <div class="traffic-controls">
+        <label for="trafficFlowToggle">Show Traffic Flow</label>
+        <input type="checkbox" id="trafficFlowToggle" v-model="trafficFlow" @change="toggleTrafficFlow">
+        <label for="trafficIncidentsToggle">Show Traffic Incidents</label>
+        <input type="checkbox" id="trafficIncidentsToggle" v-model="trafficIncidents" @change="toggleTrafficIncidents">
+      </div>
+    </form>
+  </div>
+</template>
+
 <script>
 import { onMounted, ref } from 'vue'
-let userLongitude = ref(null)
-let userLatitude = ref(null)
-let errorLoadingMap = ref(null)
 import { createSearchBox } from './features/routing.vue'
-const getUserLocation = () => {
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        userLatitude.value = position.coords.latitude
-        userLongitude.value = position.coords.longitude
-        resolve()
-      },
-      (error) => {
-        reject(error)
-      },
-      {
-        enableHighAccuracy: true, // Demander une haute précision
-        timeout: 10000, // Temps maximum pour obtenir la position (en millisecondes)
-        maximumAge: 0 // Empêcher la mise en cache de la position
-      }
-    )
-  })
-}
-const AddMarker = (map, latitude, longitude) => {
-  const tt = window.tt
-  var location = [longitude, latitude]
-  var popupOffset = 25
-  var marker = new tt.Marker().setLngLat(location).addTo(map)
-  var popup = new tt.Popup({ offset: popupOffset })
-  //reverseGeocoding(marker, popup);
-  marker.setPopup(popup).togglePopup()
-}
+
 export default {
   name: 'Map',
   setup() {
-    const mapRef = ref(null)
+    const mapRef = ref(null);
+    const trafficFlow = ref(true);
+    const trafficIncidents = ref(true);
+    const errorLoadingMap = ref(null);
+    let map;
+
+    const getUserLocation = () => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            reject(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      });
+    };
+
+    const addMarker = (map, latitude, longitude) => {
+      const location = [longitude, latitude];
+      const marker = new tt.Marker().setLngLat(location).addTo(map);
+      const popup = new tt.Popup({ offset: 25 }).setText('You are here');
+      marker.setPopup(popup).togglePopup();
+    };
+
+    const toggleTrafficFlow = () => {
+      if (trafficFlow.value) {
+        map.setTrafficFlowLayerVisibility(true);
+      } else {
+        map.setTrafficFlowLayerVisibility(false);
+      }
+    };
+
+    const toggleTrafficIncidents = () => {
+      if (trafficIncidents.value) {
+        map.setTrafficIncidentsLayerVisibility(true);
+      } else {
+        map.setTrafficIncidentsLayerVisibility(false);
+      }
+    };
+
     onMounted(async () => {
       try {
-        await getUserLocation()
-        const tt = window.tt
-        var map = tt.map({
+        const userLocation = await getUserLocation();
+        const tt = window.tt;
+        map = tt.map({
           key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
           container: mapRef.value,
           style: 'tomtom://vector/1/basic-main',
           zoom: 15,
-          center: [userLongitude.value, userLatitude.value]
-        })
-        map.addControl(new tt.FullscreenControl())
-        map.addControl(new tt.NavigationControl())
-        console.log(userLatitude.value)
-        AddMarker(map, userLatitude.value, userLongitude.value)
-
-        createSearchBox('start', map)
-        createSearchBox('finish', map)
-      } catch {
-        errorLoadingMap = true
+          center: [userLocation.longitude, userLocation.latitude]
+        });
+        map.addControl(new tt.FullscreenControl());
+        map.addControl(new tt.NavigationControl());
+        addMarker(map, userLocation.latitude, userLocation.longitude);
+        createSearchBox('start', map);
+        createSearchBox('finish', map);
+      } catch (error) {
+        console.error('Error loading map:', error);
+        errorLoadingMap.value = true;
       }
-    })
+    });
+
     return {
-      mapRef
-    }
+      mapRef,
+      trafficFlow,
+      trafficIncidents,
+      errorLoadingMap
+    };
   }
 }
 </script>
+
 <style>
 .map {
   height: 50vh;
@@ -93,19 +138,9 @@ export default {
     height 0.1s;
   width: 32px;
 }
+.traffic-controls {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
 </style>
-
-<template>
-  <h1>Maps</h1>
-  <div class="map" ref="mapRef"></div>
-  <div id="foldable" class="tt-overlay-panel -left-top -medium js-foldable">
-    <form id="form">
-      <div id="startSearchBox" class="searchbox-container">
-        <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
-      </div>
-      <div id="finishSearchBox" class="searchbox-container">
-        <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
-      </div>
-    </form>
-  </div>
-</template>
