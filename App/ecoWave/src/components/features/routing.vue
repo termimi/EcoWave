@@ -57,8 +57,10 @@ const updateRoutesBounds = (coordinates,map) => {
   }
 };
 
-const calculateRoute = (map, state) => {
+const calculateRoute = (map, state,userPosition) => {
+  
   try {
+    
     const tt = window.tt;
     if (map.getLayer('route')) {
       map.removeLayer('route');
@@ -66,18 +68,22 @@ const calculateRoute = (map, state) => {
     }
 
     if (!state.start || !state.finish) {
+      console.log("poss 2: ")
       return;
     }
-
+    else if(!state.finish){
+      state.start = [userPosition.lat, userPosition.lng];
+    }
+    console.log("Staaaaate : " + state.start)
     const startPos = state.start.join(',');
     const finalPos = state.finish.join(',');
-
     tt.services.calculateRoute({
       key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
-      traffic: false,
+      traffic: true,
       locations: `${startPos}:${finalPos}`,
     })
       .then((response) => {
+        
         const geojson = response.toGeoJson();
         map.addLayer({
           id: 'route',
@@ -104,15 +110,12 @@ const calculateRoute = (map, state) => {
   }
 
 };
-
-
-
-export const onResultSelected = (result, type, map) => {
+export const onResultSelected = (result, type, map,userPosition) => {
   const pos = result.position;
   state[type] = [pos.lng, pos.lat];
-
   drawMarker(type,map);
-  calculateRoute(map, state);
+  calculateRoute(map, state,userPosition);
+  console.log("poss: " +pos.lng)
 };
 
 export const onResultCleared = (type, map) => {
@@ -126,7 +129,7 @@ export const onResultCleared = (type, map) => {
 
   calculateRoute(map, state);
 };
-export const createSearchBox = (type, map) => {
+export const createSearchBox = (type, map,defaultPos) => {
   const tt = window.tt;
   try {
     const searchBox = new tt.plugins.SearchBox(tt.services, {
@@ -138,12 +141,11 @@ export const createSearchBox = (type, map) => {
         placeholder: type === 'start' ? 'Start Location' : 'End Location',
       },
     });
-
     document.getElementById(`${type}SearchBox`).appendChild(searchBox.getSearchBoxHTML());
-
     searchBox.on('tomtom.searchbox.resultselected', function (event) {
       if (event.data && event.data.result) {
-        onResultSelected(event.data.result, type, map);
+        console.log(event)
+        onResultSelected(event.data.result, type, map,defaultPos);
       }
     });
 

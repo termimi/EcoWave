@@ -3,12 +3,18 @@ import { onMounted,ref } from 'vue';
 let userLongitude = ref(null);
 let userLatitude = ref(null);
 let errorLoadingMap = ref(null);
+let userPosition = ref({
+  lat:null,
+  lng:null
+});
 import { createSearchBox} from './features/routing.vue';
 const getUserLocation = () =>{
     return new Promise((resolve,reject) => {
         navigator.geolocation.getCurrentPosition((position) => {
             userLatitude.value = position.coords.latitude;
             userLongitude.value = position.coords.longitude
+            userPosition.lat = userLatitude.value;
+            userPosition.lng = userLongitude.value;
             resolve();
         },
         (error) => {
@@ -27,7 +33,6 @@ const AddMarker =(map,latitude,longitude)=>{
     var popupOffset = 25; 
     var marker = new tt.Marker().setLngLat(location).addTo(map); 
     var popup = new tt.Popup({ offset: popupOffset }); 
-    //reverseGeocoding(marker, popup); 
     marker.setPopup(popup).togglePopup(); 
 }
 export default { 
@@ -50,8 +55,8 @@ export default {
             console.log(userLatitude.value)
             AddMarker(map,userLatitude.value,userLongitude.value);
 
-            createSearchBox('start',map);
-            createSearchBox('finish',map);
+            createSearchBox('start',map,userPosition,userPosition);
+            createSearchBox('finish',map,userPosition,userPosition);
         }
         catch{
             errorLoadingMap = true
