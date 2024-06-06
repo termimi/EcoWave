@@ -86,13 +86,14 @@ const calculateRoute = (map, state) => {
             data: geojson
           },
           paint: {
-            'line-color': '#2faaff',
+            'line-color': '#ffffff', // Default color, will update shortly
             'line-width': 8
           }
         })
 
         const coordinates = geojson.features[0].geometry.coordinates
         updateRoutesBounds(coordinates, map)
+        updateRouteAddress(map, travelMode.value); // Update route color based on current mode
       })
       .catch((error) => {
         console.error(error)
@@ -148,7 +149,6 @@ export const createSearchBox = (type, map) => {
   } catch (error) {
     console.log(error)
   }
-
 }
 
 export function updateRouteAddress(map, travelMode) {
@@ -157,7 +157,7 @@ export function updateRouteAddress(map, travelMode) {
     car: '#007bff',
     truck: '#ff0000',
     bicycle: '#00ff00',
-  bus: '#0000ff',
+    bus: '#0000ff',
     van: '#ff00ff',
     motorcycle: '#00ffff',
     taxi: '#ffff00'
@@ -167,5 +167,4 @@ export function updateRouteAddress(map, travelMode) {
     map.setPaintProperty('route', 'line-color', routeColor);
   }
 }
-
 </script>

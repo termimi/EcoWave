@@ -7,7 +7,7 @@
         <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
       </div>
       <div id="finishSearchBox" class="searchbox-container">
-      <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
+        <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
       </div>
       <div class="traffic-controls">
         <label for="trafficFlowToggle">Show Traffic Flow</label>
@@ -29,10 +29,9 @@
   </div>
 </template>
 
-
 <script>
-import { onMounted, ref } from 'vue'
-import { createSearchBox } from './features/routing.vue'
+import { onMounted, ref, watch } from 'vue'
+import { createSearchBox, updateRouteAddress } from './features/routing.vue'
 
 export default {
   name: 'Map',
@@ -41,6 +40,7 @@ export default {
     const trafficFlow = ref(true);
     const trafficIncidents = ref(true);
     const errorLoadingMap = ref(null);
+    const travelMode = ref('car'); // Define the travel mode reactive property
     let map;
 
     const getUserLocation = () => {
@@ -88,6 +88,13 @@ export default {
       }
     };
 
+    // Watcher for travelMode changes
+    watch(travelMode, (newMode, oldMode) => {
+      if (map && newMode !== oldMode) {
+        updateRouteAddress(map, newMode);
+      }
+    });
+
     onMounted(async () => {
       try {
         const userLocation = await getUserLocation();
@@ -114,7 +121,8 @@ export default {
       mapRef,
       trafficFlow,
       trafficIncidents,
-      errorLoadingMap
+      errorLoadingMap,
+      travelMode, // Make it available for the template
     };
   }
 }
