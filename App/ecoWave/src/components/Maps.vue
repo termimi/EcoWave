@@ -1,40 +1,37 @@
 <template>
-  <h1>Maps</h1>
-  <div class="map" ref="mapRef"></div>
-  <div id="foldable" class="tt-overlay-panel -left-top -medium js-foldable">
-    <form id="form">
-      <div id="startSearchBox" class="searchbox-container">
-        <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
-      </div>
-      <div id="finishSearchBox" class="searchbox-container">
-        <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
-      </div>
-      <div class="traffic-controls">
-        <label for="trafficFlowToggle">Show Traffic Flow</label>
-        <input type="checkbox" id="trafficFlowToggle" v-model="trafficFlow" @change="toggleTrafficFlow">
-        <label for="trafficIncidentsToggle">Show Traffic Incidents</label>
-        <input type="checkbox" id="trafficIncidentsToggle" v-model="trafficIncidents" @change="toggleTrafficIncidents">
-      </div>
-      <select v-model="travelMode" @change="updateRoute">
-        <option value="pedestrian">Pedestrian</option>
-        <option value="car">Car</option>
-        <option value="truck">Truck</option>
-        <option value="bicycle">Bicycle</option>
-        <option value="bus">Bus</option>
-        <option value="van">Van</option>
-        <option value="motorcycle">Motorcycle</option>
-        <option value="taxi">Taxi</option>
-      </select>
-    </form>
+  <div>
+    <h1>Main Map</h1>
+    <div class="map" ref="mapRef"></div>
+    <div id="foldable" class="tt-overlay-panel -left-top -medium js-foldable">
+      <form id="form">
+        <div id="startSearchBox" class="searchbox-container">
+          <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
+        </div>
+        <div id="finishSearchBox" class="searchbox-container">
+          <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
+        </div>
+        <div class="traffic-controls">
+          <label for="trafficFlowToggle">Show Traffic Flow</label>
+          <input type="checkbox" id="trafficFlowToggle" v-model="trafficFlow" @change="toggleTrafficFlow">
+          <label for="trafficIncidentsToggle">Show Traffic Incidents</label>
+          <input type="checkbox" id="trafficIncidentsToggle" v-model="trafficIncidents" @change="toggleTrafficIncidents">
+        </div>
+        <TravelMode @travelModeChanged="updateTravelMode" />
+      </form>
+    </div>
   </div>
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue'
-import { createSearchBox, updateRouteAddress } from './features/routing.vue'
+import { onMounted, ref, watch } from 'vue';
+import { createSearchBox, updateRouteAddress, calculateRoute, state } from './features/routing.vue';
+import TravelMode from './features/TravelMode.vue';
 
 export default {
   name: 'Map',
+  components: {
+    TravelMode
+  },
   setup() {
     const mapRef = ref(null);
     const trafficFlow = ref(true);
@@ -88,12 +85,16 @@ export default {
       }
     };
 
-    // Watcher for travelMode changes
-    watch(travelMode, (newMode, oldMode) => {
-      if (map && newMode !== oldMode) {
-        updateRouteAddress(map, newMode);
+    const updateRoute = () => {
+      if (state.start && state.finish) {
+        calculateRoute(map, state, travelMode.value);
       }
-    });
+    };
+
+    const updateTravelMode = (mode) => {
+      travelMode.value = mode;
+      updateRoute();
+    };
 
     onMounted(async () => {
       try {
@@ -104,13 +105,19 @@ export default {
           container: mapRef.value,
           style: 'tomtom://vector/1/basic-main',
           zoom: 15,
-          center: [userLocation.longitude, userLocation.latitude]
+          center: [userLocation.longitude, userLocation.latitude],
+          stylesVisibility: {
+            trafficFlow: trafficFlow.value,
+            trafficIncidents: trafficIncidents.value
+          }
         });
         map.addControl(new tt.FullscreenControl());
         map.addControl(new tt.NavigationControl());
         addMarker(map, userLocation.latitude, userLocation.longitude);
-        createSearchBox('start', map);
-        createSearchBox('finish', map);
+        createSearchBox('start', map, travelMode.value);
+        createSearchBox('finish', map, travelMode.value);
+        
+        watch(travelMode, updateRoute);
       } catch (error) {
         console.error('Error loading map:', error);
         errorLoadingMap.value = true;
@@ -122,7 +129,8 @@ export default {
       trafficFlow,
       trafficIncidents,
       errorLoadingMap,
-      travelMode, // Make it available for the template
+      travelMode,
+      updateTravelMode
     };
   }
 }

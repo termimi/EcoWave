@@ -1,3 +1,20 @@
+<template>
+  <div>
+    <h1>Traffic Map</h1>
+    <div ref="mapRef" class="map"></div>
+    <div class="controls">
+      <label>
+        <input type="checkbox" v-model="showIncidents" />
+        Show Traffic Incidents
+      </label>
+      <label>
+        <input type="checkbox" v-model="showFlow" />
+        Show Traffic Flow
+      </label>
+    </div>
+  </div>
+</template>
+
 <script>
 import { onMounted, ref, watch } from 'vue'
 
@@ -9,12 +26,42 @@ export default {
     const showIncidents = ref(true)
     const showFlow = ref(true)
 
-    const initializeMap = () => {
+    const getUserLocation = () => {
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude
+            });
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            reject(error);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+      });
+    };
+
+    const initializeMap = async () => {
       const tt = window.tt
+      let userLocation;
+
+      try {
+        userLocation = await getUserLocation();
+      } catch (error) {
+        userLocation = { latitude: 51.50276, longitude: -0.12634 }; // Default location if geolocation fails
+      }
+
       map.value = tt.map({
-        key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG', // Votre clé API TomTom
+        key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
         container: mapRef.value,
-        center: [-0.12634, 51.50276], // Coordonnées initiales de la carte
+        center: [userLocation.longitude, userLocation.latitude],
         zoom: 13,
         stylesVisibility: {
           trafficIncidents: true,
@@ -62,3 +109,13 @@ export default {
   }
 }
 </script>
+
+<style>
+.map {
+  height: 50vh;
+  width: 50vw;
+}
+.controls {
+  margin-top: 10px;
+}
+</style>
