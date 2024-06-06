@@ -7,7 +7,7 @@
         <div class="tt-icon tt-icon-size icon-spacing-right -start"></div>
       </div>
       <div id="finishSearchBox" class="searchbox-container">
-        <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
+      <div class="tt-icon tt-icon-size icon-spacing-right -finish"></div>
       </div>
       <div class="traffic-controls">
         <label for="trafficFlowToggle">Show Traffic Flow</label>
@@ -15,9 +15,20 @@
         <label for="trafficIncidentsToggle">Show Traffic Incidents</label>
         <input type="checkbox" id="trafficIncidentsToggle" v-model="trafficIncidents" @change="toggleTrafficIncidents">
       </div>
+      <select v-model="travelMode" @change="updateRoute">
+        <option value="pedestrian">Pedestrian</option>
+        <option value="car">Car</option>
+        <option value="truck">Truck</option>
+        <option value="bicycle">Bicycle</option>
+        <option value="bus">Bus</option>
+        <option value="van">Van</option>
+        <option value="motorcycle">Motorcycle</option>
+        <option value="taxi">Taxi</option>
+      </select>
     </form>
   </div>
 </template>
+
 
 <script>
 import { onMounted, ref } from 'vue'

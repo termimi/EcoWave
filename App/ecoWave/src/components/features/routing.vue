@@ -148,5 +148,24 @@ export const createSearchBox = (type, map) => {
   } catch (error) {
     console.log(error)
   }
+
 }
+
+export function updateRouteAddress(map, travelMode) {
+  const routeColor = {
+    pedestrian: '#ff7f00',
+    car: '#007bff',
+    truck: '#ff0000',
+    bicycle: '#00ff00',
+  bus: '#0000ff',
+    van: '#ff00ff',
+    motorcycle: '#00ffff',
+    taxi: '#ffff00'
+  }[travelMode] || '#000000';
+
+  if (map.getLayer('route')) {
+    map.setPaintProperty('route', 'line-color', routeColor);
+  }
+}
+
 </script>
