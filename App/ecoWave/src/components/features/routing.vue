@@ -1,6 +1,7 @@
 <script>
 import { onMounted, ref } from 'vue';
 
+let autoNav = ref(false);
 export const state = {
   start: undefined,
   finish: undefined,
@@ -65,6 +66,7 @@ const calculateRoute = (map, state) => {
     if (map.getLayer('route')) {
       map.removeLayer('route');
       map.removeSource('route');
+      console.log("Annulation :");
     }
 
     if (!state.start || !state.finish) {
@@ -109,9 +111,14 @@ const calculateRoute = (map, state) => {
 export const onResultSelected = (result, type, map,userPosition) => {
   const pos = result.position;
   state[type] = [pos.lng, pos.lat];
-  console.log("Tessssst : ");
   if(state.start === undefined){
     state['start'] = [userPosition.lng,userPosition.lat]
+    autoNav = true
+    console.log("auto : " + autoNav)
+  }
+  else{
+    autoNav = false
+    console.log("auto : " + autoNav)
   }
   drawMarker(type,map);
   calculateRoute(map, state);
@@ -120,8 +127,13 @@ export const onResultSelected = (result, type, map,userPosition) => {
 
 export const onResultCleared = (type, map) => {
   state[type] = undefined;
+  if(autoNav){
+    map.removeLayer('route');
+    map.removeSource('route');
+  }
 
   if (state.marker[type]) {
+    console.log("MarkerType :" + type);
     state.marker[type].remove();
     state.marker[type] = undefined;
     updateBounds();
