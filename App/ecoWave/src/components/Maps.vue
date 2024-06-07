@@ -10,7 +10,7 @@
         </div>
         <div v-for="(waypoint, index) in waypoints.slice(1, -1)" :key="index" class="route-input-container">
           <div class="tt-icon tt-icon-size -waypoint"></div>
-          <div :ref="'waypointSearchBox' + (index + 1)" class="searchbox-container"></div>
+          <div :id="'waypointSearchBox' + index" class="searchbox-container"></div>
           <button class="remove-btn" @click="removeWaypoint(index + 1)">🗑️</button>
         </div>
         <div class="route-input-container">
@@ -90,7 +90,8 @@ export default {
       });
     };
 
-    const createSearchBoxForWaypoint = (index) => {
+    const createSearchBoxForWaypoint = async (index) => {
+      await nextTick();
       const tt = window.tt;
       const searchBox = new tt.plugins.SearchBox(tt.services, {
         showSearchButton: false,
@@ -104,32 +105,34 @@ export default {
 
       const container = index === 0 ? document.getElementById('startSearchBox') :
         index === waypoints.value.length - 1 ? document.getElementById('finishSearchBox') :
-        this.$refs['waypointSearchBox' + index][0];
-      container.appendChild(searchBox.getSearchBoxHTML());
+        document.getElementById(`waypointSearchBox${index}`);
+      if (container) {
+        container.appendChild(searchBox.getSearchBoxHTML());
 
-      searchBox.on('tomtom.searchbox.resultselected', (event) => {
-        if (event.data && event.data.result) {
-          waypoints.value[index].position = event.data.result.position;
+        searchBox.on('tomtom.searchbox.resultselected', (event) => {
+          if (event.data && event.data.result) {
+            waypoints.value[index].position = event.data.result.position;
+            if (index === 0) {
+              addStartMarker(event.data.result.position);
+            } else if (index === waypoints.value.length - 1) {
+              addFinishMarker(event.data.result.position);
+            }
+            calculateRouteForWaypoints();
+          }
+        });
+
+        searchBox.on('tomtom.searchbox.resultscleared', () => {
+          waypoints.value[index].position = undefined;
           if (index === 0) {
-            addStartMarker(event.data.result.position);
+            removeStartMarker();
           } else if (index === waypoints.value.length - 1) {
-            addFinishMarker(event.data.result.position);
+            removeFinishMarker();
           }
           calculateRouteForWaypoints();
-        }
-      });
+        });
 
-      searchBox.on('tomtom.searchbox.resultscleared', () => {
-        waypoints.value[index].position = undefined;
-        if (index === 0) {
-          removeStartMarker();
-        } else if (index === waypoints.value.length - 1) {
-          removeFinishMarker();
-        }
-        calculateRouteForWaypoints();
-      });
-
-      waypoints.value[index].searchBox = searchBox;
+        waypoints.value[index].searchBox = searchBox;
+      }
     };
 
     const addStartMarker = (position) => {

@@ -13,12 +13,12 @@
       const trafficFlow = ref(true);
       const trafficIncidents = ref(true);
       const errorLoadingMap = ref(null);
-      const travelMode = ref('car'); // Define the travel mode reactive property
+      const travelMode = ref('car'); 
       let map;
   
       const waypoints = ref([
-        { position: undefined, searchBox: null, icon: '-start' }, // Start location
-        { position: undefined, searchBox: null, icon: '-finish' } // End location
+        { position: undefined, searchBox: null, icon: '-start' }, 
+        { position: undefined, searchBox: null, icon: '-finish' } 
       ]);
   
       const addWaypoint = async () => {
@@ -28,11 +28,11 @@
           icon: '-waypoint'
         });
         await nextTick();
-        createSearchBoxForWaypoint(waypoints.value.length - 2); // Initialize search box for the new waypoint
+        createSearchBoxForWaypoint(waypoints.value.length - 2);
       };
   
       const removeWaypoint = (index) => {
-        if (index > 0 && index < waypoints.value.length - 1) { // Prevent removing the start and end
+        if (index > 0 && index < waypoints.value.length - 1) { 
           waypoints.value.splice(index, 1);
           updateIcons();
           calculateRouteForWaypoints();
@@ -210,8 +210,8 @@
           map.addControl(new tt.FullscreenControl());
           map.addControl(new tt.NavigationControl());
           addMarker(map, userLocation.latitude, userLocation.longitude);
-          createSearchBoxForWaypoint(0); // Initialize the start location
-          createSearchBoxForWaypoint(waypoints.value.length - 1); // Initialize the end location
+          createSearchBoxForWaypoint(0); 
+          createSearchBoxForWaypoint(waypoints.value.length - 1);    
           
           watch(travelMode, updateRoute);
         } catch (error) {
