@@ -142,7 +142,7 @@ export const onResultCleared = (type, map) => {
 
   calculateRoute(map, state);
 };
-export const createSearchBox = (type, map,defaultPos) => {
+export const createSearchBox = (type, map,userPosition) => {
   const tt = window.tt;
   try {
     const searchBox = new tt.plugins.SearchBox(tt.services, {
@@ -158,7 +158,7 @@ export const createSearchBox = (type, map,defaultPos) => {
     searchBox.on('tomtom.searchbox.resultselected', function (event) {
       if (event.data && event.data.result) {
         console.log(event)
-        onResultSelected(event.data.result, type, map,defaultPos);
+        onResultSelected(event.data.result, type, map,userPosition);
       }
     });
 

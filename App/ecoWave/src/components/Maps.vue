@@ -1,7 +1,5 @@
 <script>
 import { onMounted,ref } from 'vue';
-let userLongitude = ref(null);
-let userLatitude = ref(null);
 let errorLoadingMap = ref(null);
 let userPosition = ref({
   lat:null,
@@ -11,10 +9,8 @@ import { createSearchBox} from './features/routing.vue';
 const getUserLocation = () =>{
     return new Promise((resolve,reject) => {
         navigator.geolocation.getCurrentPosition((position) => {
-            userLatitude.value = position.coords.latitude;
-            userLongitude.value = position.coords.longitude
-            userPosition.lat = userLatitude.value;
-            userPosition.lng = userLongitude.value;
+            userPosition.lat = position.coords.latitude;
+            userPosition.lng = position.coords.longitude
             resolve();
         },
         (error) => {
@@ -48,15 +44,14 @@ export default {
                 container: mapRef.value, 
                 style: 'tomtom://vector/1/basic-main',
                 zoom:15,
-                center:[userLongitude.value,userLatitude.value],
+                center:[userPosition.lng,userPosition.lat],
               }); 
             map.addControl(new tt.FullscreenControl()); 
             map.addControl(new tt.NavigationControl());
-            console.log(userLatitude.value)
-            AddMarker(map,userLatitude.value,userLongitude.value);
+            AddMarker(map,userPosition.lat,userPosition.lng);
 
-            createSearchBox('start',map,userPosition,userPosition);
-            createSearchBox('finish',map,userPosition,userPosition);
+            createSearchBox('start',map,userPosition);
+            createSearchBox('finish',map,userPosition);
         }
         catch{
             errorLoadingMap = true
