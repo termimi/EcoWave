@@ -18,12 +18,6 @@
           <div id="finishSearchBox" class="searchbox-container"></div>
         </div>
         <button class="add-stop-btn" @click.prevent="addWaypoint">ADD STOP</button>
-        <div class="traffic-controls">
-          <label for="trafficFlowToggle">Show Traffic Flow</label>
-          <input type="checkbox" id="trafficFlowToggle" v-model="trafficFlow" @change="toggleTrafficFlow">
-          <label for="trafficIncidentsToggle">Show Traffic Incidents</label>
-          <input type="checkbox" id="trafficIncidentsToggle" v-model="trafficIncidents" @change="toggleTrafficIncidents">
-        </div>
         <TravelMode @travelModeChanged="updateTravelMode" />
         <div class="route-info" v-if="routeDuration">
           Estimated Travel Time: {{ routeDuration }}
@@ -35,7 +29,6 @@
 
 <script>
 import { onMounted, ref, nextTick, watch } from 'vue';
-import { createSearchBox, updateRouteAddress, calculateRoute, state } from './features/routing.vue';
 import TravelMode from './features/TravelMode.vue';
 
 export default {
@@ -51,6 +44,8 @@ export default {
     const travelMode = ref('car');
     const routeDuration = ref('');
     let map;
+    let startMarker = null;
+    let finishMarker = null;
 
     const waypoints = ref([
       { position: undefined, searchBox: null, icon: '-start' },
@@ -115,16 +110,54 @@ export default {
       searchBox.on('tomtom.searchbox.resultselected', (event) => {
         if (event.data && event.data.result) {
           waypoints.value[index].position = event.data.result.position;
+          if (index === 0) {
+            addStartMarker(event.data.result.position);
+          } else if (index === waypoints.value.length - 1) {
+            addFinishMarker(event.data.result.position);
+          }
           calculateRouteForWaypoints();
         }
       });
 
       searchBox.on('tomtom.searchbox.resultscleared', () => {
         waypoints.value[index].position = undefined;
+        if (index === 0) {
+          removeStartMarker();
+        } else if (index === waypoints.value.length - 1) {
+          removeFinishMarker();
+        }
         calculateRouteForWaypoints();
       });
 
       waypoints.value[index].searchBox = searchBox;
+    };
+
+    const addStartMarker = (position) => {
+      if (startMarker) {
+        startMarker.remove();
+      }
+      startMarker = new window.tt.Marker().setLngLat([position.lng, position.lat]).addTo(map);
+    };
+
+    const removeStartMarker = () => {
+      if (startMarker) {
+        startMarker.remove();
+        startMarker = null;
+      }
+    };
+
+    const addFinishMarker = (position) => {
+      if (finishMarker) {
+        finishMarker.remove();
+      }
+      finishMarker = new window.tt.Marker().setLngLat([position.lng, position.lat]).addTo(map);
+    };
+
+    const removeFinishMarker = () => {
+      if (finishMarker) {
+        finishMarker.remove();
+        finishMarker = null;
+      }
     };
 
     const calculateRouteForWaypoints = () => {
@@ -166,11 +199,17 @@ export default {
 
           map.fitBounds(bounds, { padding: 100 });
 
-          // Update route duration
           const routeSummary = response.routes[0].summary;
           const durationInSeconds = routeSummary.travelTimeInSeconds;
           routeDuration.value = formatDuration(durationInSeconds);
+        }).catch((error) => {
+          console.error('Error calculating route:', error);
         });
+      } else {
+        if (map.getLayer('route')) {
+          map.removeLayer('route');
+          map.removeSource('route');
+        }
       }
     };
 
@@ -178,7 +217,6 @@ export default {
       const minutes = Math.floor(seconds / 60);
       const hours = Math.floor(minutes / 60);
       const remainingMinutes = minutes % 60;
-
       return `${hours} hrs ${remainingMinutes} mins`;
     };
 
@@ -316,9 +354,7 @@ export default {
   display: flex;
   height: 32px;
   justify-content: center;
-  transition:
-    width 0.1s,
-    height 0.1s;
+  transition: width 0.1s, height 0.1s;
   width: 32px;
 }
 .traffic-controls {

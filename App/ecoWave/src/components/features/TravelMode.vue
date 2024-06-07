@@ -27,7 +27,7 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .travel-mode {
   margin-top: 10px;
 }
