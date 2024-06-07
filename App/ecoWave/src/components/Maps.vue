@@ -48,8 +48,8 @@ export default {
                 container: mapRef.value, 
                 style: 'tomtom://vector/1/basic-main',
                 zoom:15,
-                center:[userLongitude.value,userLatitude.value]
-            }); 
+                center:[userLongitude.value,userLatitude.value],
+              }); 
             map.addControl(new tt.FullscreenControl()); 
             map.addControl(new tt.NavigationControl());
             console.log(userLatitude.value)

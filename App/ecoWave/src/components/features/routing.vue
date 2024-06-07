@@ -1,6 +1,5 @@
 <script>
 import { onMounted, ref } from 'vue';
-
 let autoNav = ref(false);
 export const state = {
   start: undefined,
@@ -57,7 +56,13 @@ const updateRoutesBounds = (coordinates,map) => {
     map.fitBounds(bounds, { duration: 0, padding: 50 });
   }
 };
-
+const setMapOptions = (map,state) => {
+  const zoom = 18;
+  const bearing = 130;
+  map.setCenter(state['start']);
+  map.setZoom(zoom)
+  map.setBearing(bearing)
+}
 const calculateRoute = (map, state) => {
   
   try {
@@ -66,7 +71,6 @@ const calculateRoute = (map, state) => {
     if (map.getLayer('route')) {
       map.removeLayer('route');
       map.removeSource('route');
-      console.log("Annulation :");
     }
 
     if (!state.start || !state.finish) {
@@ -95,9 +99,9 @@ const calculateRoute = (map, state) => {
             'line-width': 8,
           },
         });
-
         const coordinates = geojson.features[0].geometry.coordinates;
         updateRoutesBounds(coordinates,map);
+        setMapOptions(map, state);
       })
       .catch((error) => {
         console.error(error);
@@ -114,15 +118,12 @@ export const onResultSelected = (result, type, map,userPosition) => {
   if(state.start === undefined){
     state['start'] = [userPosition.lng,userPosition.lat]
     autoNav = true
-    console.log("auto : " + autoNav)
   }
   else{
     autoNav = false
-    console.log("auto : " + autoNav)
   }
   drawMarker(type,map);
   calculateRoute(map, state);
-  console.log("poss: " +pos.lng)
 };
 
 export const onResultCleared = (type, map) => {
