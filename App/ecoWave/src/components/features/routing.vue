@@ -57,7 +57,7 @@ const updateRoutesBounds = (coordinates,map) => {
   }
 };
 
-const calculateRoute = (map, state,userPosition) => {
+const calculateRoute = (map, state) => {
   
   try {
     
@@ -68,11 +68,7 @@ const calculateRoute = (map, state,userPosition) => {
     }
 
     if (!state.start || !state.finish) {
-      console.log("poss 2: ")
       return;
-    }
-    else if(!state.finish){
-      state.start = [userPosition.lat, userPosition.lng];
     }
     console.log("Staaaaate : " + state.start)
     const startPos = state.start.join(',');
@@ -113,8 +109,12 @@ const calculateRoute = (map, state,userPosition) => {
 export const onResultSelected = (result, type, map,userPosition) => {
   const pos = result.position;
   state[type] = [pos.lng, pos.lat];
+  console.log("Tessssst : ");
+  if(state.start === undefined){
+    state['start'] = [userPosition.lng,userPosition.lat]
+  }
   drawMarker(type,map);
-  calculateRoute(map, state,userPosition);
+  calculateRoute(map, state);
   console.log("poss: " +pos.lng)
 };
 
