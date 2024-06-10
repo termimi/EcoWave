@@ -1,5 +1,6 @@
 <script>
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
+
 let autoNav = ref(false);
 export const state = {
   start: undefined,
@@ -9,7 +10,21 @@ export const state = {
     finish: undefined,
   },
 };
-const drawMarker = (type,map) => {
+
+const emissionFactors = {
+  car: 0.12, // kg CO2 per km
+  bus: 0.06, // kg CO2 per km
+  bicycle: 0, // kg CO2 per km
+  pedestrian: 0, // kg CO2 per km
+  motorcycle: 0.09, // kg CO2 per km
+};
+
+export const calculateCarbonFootprint = (mode, distanceInMeters) => {
+  const distanceInKm = distanceInMeters / 1000;
+  return (distanceInKm * emissionFactors[mode]).toFixed(2);
+};
+
+const drawMarker = (type, map) => {
   const tt = window.tt;
   if (state.marker[type]) {
     state.marker[type].remove();
@@ -44,7 +59,8 @@ const updateBounds = (map) => {
     map.fitBounds(bounds, { duration: 0, padding: 50 });
   }
 };
-const updateRoutesBounds = (coordinates,map) => {
+
+const updateRoutesBounds = (coordinates, map) => {
   const tt = window.tt;
   const bounds = new tt.LngLatBounds();
 
@@ -56,17 +72,17 @@ const updateRoutesBounds = (coordinates,map) => {
     map.fitBounds(bounds, { duration: 0, padding: 50 });
   }
 };
-const setMapOptions = (map,state) => {
+
+const setMapOptions = (map, state) => {
   const zoom = 18;
   const bearing = 130;
   map.setCenter(state['start']);
-  map.setZoom(zoom)
-  map.setBearing(bearing)
-}
+  map.setZoom(zoom);
+  map.setBearing(bearing);
+};
+
 const calculateRoute = (map, state) => {
-  
   try {
-    
     const tt = window.tt;
     if (map.getLayer('route')) {
       map.removeLayer('route');
@@ -76,16 +92,16 @@ const calculateRoute = (map, state) => {
     if (!state.start || !state.finish) {
       return;
     }
-    console.log("Staaaaate : " + state.start)
+
     const startPos = state.start.join(',');
     const finalPos = state.finish.join(',');
+
     tt.services.calculateRoute({
       key: 'R7dnyFDjCXpftwFLBGDFaklxWOOpPPsG',
       traffic: true,
       locations: `${startPos}:${finalPos}`,
     })
       .then((response) => {
-        
         const geojson = response.toGeoJson();
         map.addLayer({
           id: 'route',
@@ -100,41 +116,38 @@ const calculateRoute = (map, state) => {
           },
         });
         const coordinates = geojson.features[0].geometry.coordinates;
-        updateRoutesBounds(coordinates,map);
+        updateRoutesBounds(coordinates, map);
         setMapOptions(map, state);
       })
       .catch((error) => {
         console.error(error);
       });
+  } catch (error) {
+    console.log(error);
   }
-  catch (error) {
-    console.log(error)
-  }
-
 };
-export const onResultSelected = (result, type, map,userPosition) => {
+
+export const onResultSelected = (result, type, map, userPosition) => {
   const pos = result.position;
   state[type] = [pos.lng, pos.lat];
-  if(state.start === undefined){
-    state['start'] = [userPosition.lng,userPosition.lat]
-    autoNav = true
+  if (state.start === undefined) {
+    state['start'] = [userPosition.lng, userPosition.lat];
+    autoNav = true;
+  } else {
+    autoNav = false;
   }
-  else{
-    autoNav = false
-  }
-  drawMarker(type,map);
+  drawMarker(type, map);
   calculateRoute(map, state);
 };
 
 export const onResultCleared = (type, map) => {
   state[type] = undefined;
-  if(autoNav){
+  if (autoNav) {
     map.removeLayer('route');
     map.removeSource('route');
   }
 
   if (state.marker[type]) {
-    console.log("MarkerType :" + type);
     state.marker[type].remove();
     state.marker[type] = undefined;
     updateBounds();
@@ -142,7 +155,8 @@ export const onResultCleared = (type, map) => {
 
   calculateRoute(map, state);
 };
-export const createSearchBox = (type, map,userPosition) => {
+
+export const createSearchBox = (type, map, userPosition) => {
   const tt = window.tt;
   try {
     const searchBox = new tt.plugins.SearchBox(tt.services, {
@@ -157,20 +171,15 @@ export const createSearchBox = (type, map,userPosition) => {
     document.getElementById(`${type}SearchBox`).appendChild(searchBox.getSearchBoxHTML());
     searchBox.on('tomtom.searchbox.resultselected', function (event) {
       if (event.data && event.data.result) {
-        console.log(event)
-        onResultSelected(event.data.result, type, map,userPosition);
+        onResultSelected(event.data.result, type, map, userPosition);
       }
     });
 
     searchBox.on('tomtom.searchbox.resultscleared', function () {
       onResultCleared(type, map);
     });
+  } catch (error) {
+    console.log(error);
   }
-  catch (error) {
-    console.log(error)
-  }
-
 };
-
-
 </script>
